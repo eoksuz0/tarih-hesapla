@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tarih Hesaplayıcı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F5; --paper:#FFFFFF; --ink:#1B2A4A; --muted:#667085; --line:#D5DBE4;
+  --red:#C8102E; --green:#15803D; --field:#F6F8FB; --shadow:0 1px 0 #D5DBE4, 0 12px 28px -18px rgba(27,42,74,.45);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10151F; --paper:#18202E; --ink:#E7ECF4; --muted:#98A2B3; --line:#2A3446;
+    --red:#FF5A6E; --green:#4ADE80; --field:#1F2939; --shadow:0 1px 0 #2A3446, 0 12px 28px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10151F; --paper:#18202E; --ink:#E7ECF4; --muted:#98A2B3; --line:#2A3446;
+  --red:#FF5A6E; --green:#4ADE80; --field:#1F2939; --shadow:0 1px 0 #2A3446, 0 12px 28px -18px rgba(0,0,0,.8);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px; line-height:1.5; -webkit-text-size-adjust:100%;
+}
+main{max-width:460px; margin:0 auto; padding:20px 16px 32px}
+h1{font-family:"Big Shoulders Display","Arial Narrow",sans-serif; font-weight:900; font-size:2rem; line-height:1; margin:8px 0 4px; letter-spacing:.01em}
+.sub{margin:0 0 20px; color:var(--muted); font-size:.95rem}
+
+/* Takvim yaprağı */
+.leaf{
+  background:var(--paper); border-radius:6px 6px 14px 14px; box-shadow:var(--shadow);
+  text-align:center; position:relative; overflow:hidden; margin-bottom:20px;
+}
+.leaf-top{
+  background:var(--ink); color:var(--paper); padding:10px 12px 12px;
+  font-weight:700; font-size:1rem; position:relative;
+}
+.leaf-top::before,.leaf-top::after{
+  content:""; position:absolute; top:-6px; width:12px; height:18px; border-radius:6px;
+  background:var(--bg); border:2px solid var(--line);
+}
+.leaf-top::before{left:28%} .leaf-top::after{right:28%}
+.leaf-day{
+  font-family:"Big Shoulders Display","Arial Narrow",sans-serif; font-weight:900;
+  font-size:clamp(7rem,38vw,9.5rem); line-height:.95; margin:14px 0 2px; font-variant-numeric:tabular-nums;
+}
+.leaf-weekday{font-size:1.35rem; font-weight:700; margin:0}
+.leaf-note .res{color:var(--green); font-weight:700}
+.leaf-note{color:var(--muted); font-size:.9rem; margin:6px 16px 16px}
+.leaf.sunday .leaf-day,.leaf.sunday .leaf-weekday{color:var(--red)}
+.leaf-perf{border-top:2px dashed var(--line); margin:0 10px}
+.leaf-foot{padding:10px 14px 14px; font-size:.9rem; color:var(--muted)}
+.leaf-foot strong{color:var(--ink)}
+.flip{animation:flip .35s ease-out}
+@keyframes flip{from{transform:rotateX(-35deg); opacity:.3; transform-origin:top} to{transform:none; opacity:1}}
+@media (prefers-reduced-motion: reduce){.flip{animation:none}}
+
+/* Form */
+.panel{background:var(--paper); border-radius:14px; padding:16px; box-shadow:var(--shadow)}
+label.l{display:block; font-weight:600; font-size:.9rem; margin:0 0 6px}
+.row{margin-bottom:16px}
+input,select{
+  font:inherit; color:var(--ink); background:var(--field); border:1.5px solid var(--line);
+  border-radius:10px; padding:12px; width:100%; min-height:48px; appearance:none; -webkit-appearance:none;
+}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--red); outline-offset:2px}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%; background-size:6px 6px; background-repeat:no-repeat; padding-right:36px}
+.seg{display:grid; grid-template-columns:1fr 1fr; background:var(--field); border:1.5px solid var(--line); border-radius:10px; padding:3px}
+.seg button{font:inherit; font-weight:700; border:0; background:transparent; color:var(--muted); padding:10px; border-radius:8px; min-height:44px; cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--paper)}
+.datepick{display:grid; grid-template-columns:0.8fr 1.4fr 1fr; gap:8px}
+.amount{display:grid; grid-template-columns:1fr 1.1fr; gap:10px}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.chips button{font:inherit; font-size:.88rem; font-weight:600; border:1.5px solid var(--line); background:transparent; color:var(--ink); border-radius:999px; padding:7px 12px; cursor:pointer}
+.today-btn{font:inherit; font-size:.85rem; font-weight:600; border:0; background:none; color:var(--red); padding:4px 0; cursor:pointer; float:right}
+.err{color:var(--red); font-weight:600; font-size:.9rem; margin:0}
+</style>
+</head>
+<body>
+<main>
+  <h1>Hangi güne denk geliyor?</h1>
+  <p class="sub">Bir tarih seç, gün, hafta, ay ya da yıl ekle veya çıkar.</p>
+
+  <section class="leaf" id="leaf" aria-live="polite">
+    <div class="leaf-top" id="leafMonth">—</div>
+    <p class="leaf-day" id="leafDay">—</p>
+    <p class="leaf-weekday" id="leafWeekday">—</p>
+    <p class="leaf-note" id="leafNote"></p>
+    <div class="leaf-perf"></div>
+    <div class="leaf-foot" id="leafFoot"></div>
+  </section>
+
+  <section class="panel">
+    <div class="row">
+      <label class="l" for="sDay">Başlangıç tarihi <button type="button" class="today-btn" id="todayBtn">Bugün</button></label>
+      <div class="datepick">
+        <select id="sDay" aria-label="Gün"></select>
+        <select id="sMonth" aria-label="Ay"></select>
+        <select id="sYear" aria-label="Yıl"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="seg" role="group" aria-label="İşlem">
+        <button type="button" id="addBtn" aria-pressed="true">＋ Ekle</button>
+        <button type="button" id="subBtn" aria-pressed="false">− Çıkar</button>
+      </div>
+    </div>
+
+    <div class="row" style="margin-bottom:0">
+      <label class="l" for="amount">Miktar</label>
+      <div class="amount">
+        <input type="number" id="amount" inputmode="numeric" min="0" step="1" value="30">
+        <select id="unit" aria-label="Birim">
+          <option value="d">gün</option>
+          <option value="w">hafta</option>
+          <option value="m">ay</option>
+          <option value="y">yıl</option>
+        </select>
+      </div>
+      <div class="chips">
+        <button type="button" data-n="7" data-u="d">7 gün</button>
+        <button type="button" data-n="30" data-u="d">30 gün</button>
+        <button type="button" data-n="90" data-u="d">90 gün</button>
+        <button type="button" data-n="1" data-u="m">1 ay</button>
+        <button type="button" data-n="6" data-u="m">6 ay</button>
+        <button type="button" data-n="1" data-u="y">1 yıl</button>
+      </div>
+      <p class="err" id="err" hidden></p>
+    </div>
+  </section>
+</main>
+
+<script>
+const MONTHS=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const DAYS=["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+const UNITS={d:"gün",w:"hafta",m:"ay",y:"yıl"};
+const $=id=>document.getElementById(id);
+let sign=1;
+
+function todayStr(){
+  const t=new Date();
+  return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+}
+function parse(s){const [y,m,d]=s.split("-").map(Number); return new Date(Date.UTC(y,m-1,d));}
+function fmt(dt){return dt.getUTCDate()+" "+MONTHS[dt.getUTCMonth()]+" "+dt.getUTCFullYear()+", "+DAYS[dt.getUTCDay()];}
+
+function addMonths(dt,n){
+  const y=dt.getUTCFullYear(), m=dt.getUTCMonth()+n, d=dt.getUTCDate();
+  const last=new Date(Date.UTC(y,m+1,0)).getUTCDate(); // ayın son günü
+  return {date:new Date(Date.UTC(y,m,Math.min(d,last))), clamped:d>last};
+}
+
+function calc(){
+  const err=$("err"); err.hidden=true;
+  const s=getStart();
+  const n=parseInt($("amount").value,10);
+  if(!s){err.textContent="Bir başlangıç tarihi seç."; err.hidden=false; return;}
+  if(isNaN(n)||n<0){err.textContent="Miktar 0 veya daha büyük bir tam sayı olmalı."; err.hidden=false; return;}
+  const u=$("unit").value, start=parse(s);
+  let res, clamped=false;
+  if(u==="d"||u==="w"){
+    const days=(u==="w"?n*7:n)*sign;
+    res=new Date(start.getTime()+days*86400000);
+  }else{
+    const r=addMonths(start,(u==="y"?n*12:n)*sign); res=r.date; clamped=r.clamped;
+  }
+  const diff=Math.round((res-start)/86400000);
+  const today=parse(todayStr());
+  const fromToday=Math.round((res-today)/86400000);
+
+  const leaf=$("leaf");
+  leaf.classList.remove("flip"); void leaf.offsetWidth; leaf.classList.add("flip");
+  leaf.classList.toggle("sunday",res.getUTCDay()===0||res.getUTCDay()===6);
+  $("leafMonth").textContent=MONTHS[res.getUTCMonth()]+" "+res.getUTCFullYear();
+  $("leafDay").textContent=res.getUTCDate();
+  $("leafWeekday").textContent=DAYS[res.getUTCDay()];
+
+  const num=dt=>String(dt.getUTCDate()).padStart(2,"0")+"."+String(dt.getUTCMonth()+1).padStart(2,"0")+"."+dt.getUTCFullYear();
+  let note=num(start)+(sign>0?" + ":" − ")+n+" "+UNITS[u]+" = <span class=\"res\">"+num(res)+"</span>";
+  if(u==="m"||u==="y") note+=" ("+Math.abs(diff)+" gün)";
+  if(clamped) note+=". O ayda bu gün olmadığı için ayın son gününe ayarlandı";
+  $("leafNote").innerHTML=note+".";
+
+  let rel = fromToday===0?"Bu tarih <strong>bugün</strong>."
+          : fromToday>0?"Bugünden <strong>"+fromToday+" gün sonra</strong>."
+          :"Bugünden <strong>"+(-fromToday)+" gün önce</strong>.";
+  $("leafFoot").innerHTML=rel;
+}
+
+function setSign(v){
+  sign=v; $("addBtn").setAttribute("aria-pressed",v>0); $("subBtn").setAttribute("aria-pressed",v<0); calc();
+}
+
+// Türkçe tarih seçici
+function fillDays(){
+  const y=+$("sYear").value, m=+$("sMonth").value, keep=+$("sDay").value||1;
+  const last=new Date(Date.UTC(y,m+1,0)).getUTCDate();
+  $("sDay").innerHTML="";
+  for(let d=1;d<=last;d++) $("sDay").add(new Option(d,d));
+  $("sDay").value=Math.min(keep,last);
+}
+function setStart(str){
+  const [y,m,d]=str.split("-").map(Number);
+  $("sYear").value=y; $("sMonth").value=m-1; $("sDay").value=1; fillDays(); $("sDay").value=d;
+}
+function getStart(){
+  return $("sYear").value+"-"+String(+$("sMonth").value+1).padStart(2,"0")+"-"+String($("sDay").value).padStart(2,"0");
+}
+MONTHS.forEach((n,i)=>$("sMonth").add(new Option((i+1)+" - "+n,i)));
+for(let y=1900;y<=2150;y++) $("sYear").add(new Option(y,y));
+setStart(todayStr());
+["sMonth","sYear"].forEach(id=>$(id).addEventListener("change",()=>{fillDays(); calc();}));
+$("sDay").addEventListener("change",calc);
+$("todayBtn").onclick=()=>{setStart(todayStr()); calc();};
+$("addBtn").onclick=()=>setSign(1);
+$("subBtn").onclick=()=>setSign(-1);
+["amount","unit"].forEach(id=>$(id).addEventListener("input",calc));
+document.querySelectorAll(".chips button").forEach(b=>b.onclick=()=>{
+  $("amount").value=b.dataset.n; $("unit").value=b.dataset.u; calc();
+});
+calc();
+</script>
+</body>
+</html>
